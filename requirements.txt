@@ -1,2 +1,2 @@
-requests==2.23.0
-dnslib==0.9.14
+requests>=2.23.0
+dnslib>=0.9.14

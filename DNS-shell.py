@@ -119,22 +119,20 @@ def parse_output(req):
     rdata = A('127.0.0.1')
     TTL = 60 * 5
     rqt = rdata.__class__.__name__
-    cmds.append([request.q.qname.label[1], request.q.qname.label[3]])
-    if request.q.qname.label[2] == 'sqsp' and request.q.qname.label[1] != 'END' and 'LENGTH' not in cmds:
-        cmds.append('LENGTH')
-        rcvtime = time.time()
-        expected = int(request.q.qname.label[1][4:])
-        print("[+] Expecting %s Chunks." % request.q.qname.label[1][4:])
-    if request.q.qname.label[2] != 'sqsp':
-        if request.q.qname.label[1] not in cmds:
+    if len(request.q.qname.label) >= 2:
+        cmds.append(request.q.qname.label[1])
+        if request.q.qname.label[1] != b'END' and 'LENGTH' not in cmds:
+            cmds.append('LENGTH')
+            rcvtime = time.time()
+            print("[+] Expecting {} Chunks.".format(int(request.q.qname.label[1][4:])))
+        elif request.q.qname.label[1] == b'END':
+            cmds.append('END')
+        else:
             cmds.append(request.q.qname.label[1])
-            c = request.q.qname.label[2]
-            cm = c.decode('hex')
-        cr.append(cm)
-        sys.stdout.write("\r[+] Chunks Recieved: %d" % len(cr))
-        sys.stdout.flush()
-    if request.q.qname.label[1] == 'END':
-	    cmds.append('END')
+            cm = bytearray.fromhex(request.q.qname.label[2].decode()).decode()
+            cr.append(cm)
+            sys.stdout.write("\r[+] Chunks Recieved: %d" % len(cr))
+            sys.stdout.flush()
     reply.add_answer(RR(rname=request.q.qname, rtype=1,
                      rclass=1, ttl=TTL, rdata=rdata))
     return reply.pack()
@@ -160,9 +158,9 @@ def dns_response(data):
     qtype = request.q.qtype
     qt = QTYPE[qtype]
     if qt == 'A':
-       reply = parse_output(request)
+        reply = parse_output(request)
     elif qt == 'TXT':
-       reply = parse_newCMD(request)
+        reply = parse_newCMD(request)
     return reply
 
 
@@ -221,12 +219,11 @@ def main(penc, WebRequestFile=None, single=None):
                     print("[+] Command Completed Successfully.")
                     cmds = []
                     cr = []
-                    print("Stuck")
                     if single:
                         s.shutdown()
                         sys.exit()	
                     else:
-                        cmd = raw_input('SensePost-DNS-Shell::$ ')
+                        cmd = input('SensePost-DNS-Shell::$ ')
                     if cmd == 'exit':
                         time.sleep(5)
                         s.shutdown()
